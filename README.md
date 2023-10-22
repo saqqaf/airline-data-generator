@@ -1,0 +1,3 @@
+These scripts are to generate random data about airlines and flights. The data can be used for exercising data transformation from relational schema into a star schema. You can find the schemas in *data model* directory. 
+
+There are 3 scritps here. 2 of them all necessary which are *airline-data-ingestor.py* which creates the initial bulk of data and ingest it into your database server and the second one is *new-data-generator.py* which creates a small chunk of data to be feeded to the database server based on any time interval (e.g. daily or hourly .. etc). The third script can be used to store the data as CSV files instead of ingesting it to the database server. 
