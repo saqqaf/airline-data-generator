@@ -5,8 +5,30 @@ from faker import Faker
 import uuid
 import psycopg2  
 
+print("Geneating data started!")
 
 fake = Faker()
+
+# Functions to generate data with some data issues
+# Function to introduce missing data
+def introduce_missing_data(value, probability=0.01):
+    return "NaN" if random.random() < probability else value
+
+# Function to introduce outliers
+def introduce_outliers(value, probability=0.01):
+    if random.random() < probability:
+        return value * random.uniform(10, 40)  # Increase the value significantly
+    return value
+
+# Function to introduce typos
+def introduce_typos(value, probability=0.0005):
+    if random.random() < probability and isinstance(value, str):
+        chars = list(value)
+        random_index = random.randint(0, len(chars) - 1)
+        chars[random_index] = random.choice(string.ascii_letters + string.digits)
+        return ''.join(chars)
+    return value
+
 
 # Load airport, airline, and aircraft data from a CSV file into a DataFrame
 airport_data_df = pd.read_csv('/app/airports.csv')
@@ -84,8 +106,8 @@ customer_data = []
 for _ in range(num_customers):
     customer_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
     customer_name = fake.name()
-    loyalty_status = random.choice(['Gold', 'Silver', 'Bronze', 'None'])
-    customer_segment = random.choice(['Frequent Traveler', 'Leisure Traveler', 'Business Traveler'])
+    loyalty_status = introduce_missing_data(random.choice(['Gold', 'Silver', 'Bronze', 'None']))
+    customer_segment = introduce_missing_data(random.choice(['Frequent Traveler', 'Leisure Traveler', 'Business Traveler']))
     customer_data.append([customer_id, customer_name, loyalty_status, customer_segment])
 
 # Generate FlightData
@@ -98,8 +120,8 @@ for _ in range(num_flights):
     departure_time = fake.time_object(end_datetime=None)
     arrival_time = fake.time_object(end_datetime=None)
     aircraft_id = random.choice(aircraft_data)[0]
-    passenger_count = random.randint(50, 300)
-    flight_data.append([flight_number, flight_date, origin_airport_code, destination_airport_code, departure_time, arrival_time, aircraft_id, passenger_count])
+    #passenger_count = random.randint(50, 300)
+    flight_data.append([flight_number, flight_date, origin_airport_code, destination_airport_code, departure_time, arrival_time, aircraft_id])
 
 # Generate PerformanceData
 performance_data = []
@@ -114,14 +136,14 @@ fuel_consumption = []
 for flight in flight_data:
     flight_number = flight[0]
     fuel_consumed = round(random.uniform(1000, 5000), 2)
-    fuel_type = random.choice(['Jet A', 'Jet B', 'Avgas'])
+    fuel_type = introduce_missing_data(introduce_typos(random.choice(['Jet A', 'Jet B', 'Avgas'])))
     fuel_consumption.append([flight_number, fuel_consumed, fuel_type])
 
 # Generate BookingData
 booking_data = []
 
 for flight in flight_data:
-    num_bookings = random.randint(10, 50)  # Generate between 1 to 5 bookings for each flight
+    num_bookings = random.randint(10, 250)  # Generate between 1 to 5 bookings for each flight
     customer_ids_used = set()  # To track customer IDs already used in this flight
     for _ in range(num_bookings):
         # Ensure the customer ID is not a duplicate
@@ -133,8 +155,8 @@ for flight in flight_data:
         booking_date = fake.date_between(start_date='-1y', end_date='today')
         customer_ids_used.add(customer_id)  # Mark the customer ID as used
         flight_number = flight[0]  # Use the flight number from the flight_data
-        channel_name = random.choice(['Website', 'Mobile App', 'Travel Agent', 'Call Center'])
-        revenue_amount = random.randint(100, 1000)
+        channel_name = introduce_missing_data(introduce_typos(random.choice(['Website', 'Mobile App', 'Travel Agent', 'Call Center'])))
+        revenue_amount = introduce_outliers(random.randint(100, 1000))
         booking_data.append([booking_id, booking_date, customer_id, flight_number, channel_name, revenue_amount])
 
 
@@ -214,7 +236,7 @@ technician_data = []
 for _ in range(num_technician_data):
     technician_id = uuid.uuid4().hex[:10]
     technician_name = fake.name()
-    maintenance_team = random.choice(['Team A', 'Team B', 'Team C'])
+    maintenance_team = introduce_typos(random.choice(['Team A', 'Team B', 'Team C', 'Team D']))
     technician_data.append([technician_id, technician_name, maintenance_team])
 
 # Generate MaintanenceEvent
@@ -225,8 +247,8 @@ for _ in range(num_maintenance_events):
     aircraft_id = random.choice(aircraft_data)[0]
     technician_id = random.choice(technician_data)[0]
     maintenance_type_id = random.choice(maintenance_type)[0]
-    downtime_duration = random.randint(1, 48)
-    maintenance_cost = round(random.uniform(1000, 10000), 2)
+    downtime_duration = introduce_outliers(random.randint(1, 48))
+    maintenance_cost = introduce_outliers(round(random.uniform(1000, 10000), 2))
     maintanence_event.append([event_id, event_date, aircraft_id, technician_id, maintenance_type_id, downtime_duration, maintenance_cost])
 
 
@@ -240,7 +262,7 @@ airport_df = pd.DataFrame(airport_data, columns=['airport_id','iata_code', 'name
 airline_df = pd.DataFrame(airline_data, columns=['airline_id', 'airline_code', 'airline_name','airline_country'])
 aircraft_df = pd.DataFrame(aircraft_data, columns=['aircraft_id', 'aircraft_name', 'model', 'tail_number', 'airline_id'])
 customer_df = pd.DataFrame(customer_data, columns=['customer_id', 'customer_name', 'loyalty_status', 'customer_segment'])
-flight_df = pd.DataFrame(flight_data, columns=['flight_number', 'flight_date', 'origin_airport_code', 'destination_airport_code', 'departure_time', 'arrival_time', 'aircraft_id', 'passenger_count'])
+flight_df = pd.DataFrame(flight_data, columns=['flight_number', 'flight_date', 'origin_airport_code', 'destination_airport_code', 'departure_time', 'arrival_time', 'aircraft_id'])
 performance_df = pd.DataFrame(performance_data, columns=['flight_number', 'departure_delay', 'arrival_delay'])
 fuel_consumption_df = pd.DataFrame(fuel_consumption, columns=['flight_number', 'fuel_consumed', 'fuel_type'])
 booking_data_df = pd.DataFrame(booking_data, columns=['booking_id', 'booking_date', 'customer_id', 'flight_number', 'channel_name', 'revenue_amount'])
@@ -332,7 +354,6 @@ CREATE TABLE IF NOT EXISTS Flight (
    departure_time TIME,
    arrival_time TIME,
    aircraft_id VARCHAR(10),
-   passenger_count INTEGER,
    FOREIGN KEY (origin_airport_code) REFERENCES Airport (airport_id),
    FOREIGN KEY (destination_airport_code) REFERENCES Airport (airport_id),
    FOREIGN KEY (aircraft_id) REFERENCES Aircraft (aircraft_id)
@@ -461,9 +482,9 @@ for _, row in customer_df.iterrows():
 # Insert data into the Flight table
 for _, row in flight_df.iterrows():
     cursor.execute("""
-    INSERT INTO Flight (flight_number, flight_date, origin_airport_code, destination_airport_code, departure_time, arrival_time, aircraft_id, passenger_count)
+    INSERT INTO Flight (flight_number, flight_date, origin_airport_code, destination_airport_code, departure_time, arrival_time, aircraft_id)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (row['flight_number'], row['flight_date'], row['origin_airport_code'], row['destination_airport_code'], row['departure_time'], row['arrival_time'], row['aircraft_id'], row['passenger_count']))
+    """, (row['flight_number'], row['flight_date'], row['origin_airport_code'], row['destination_airport_code'], row['departure_time'], row['arrival_time'], row['aircraft_id']))
 
 # Insert data into the Performance table
 for _, row in performance_df.iterrows():

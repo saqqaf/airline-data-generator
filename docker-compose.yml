@@ -1,20 +1,29 @@
 version: '3'
 services:
-  # data-ingestor: #only run it once to generate the main chunk of data then disable it and run the second serivece only to keep generating data daily
-  #   image: python:3.10  # Use the appropriate Python version
-  #   volumes:
-  #     - dw-rihal-training:/app
-  #   command: bash -c "pip install pandas faker psycopg2 && python3 /app/airline-data-ingestor.py"
-  #   networks:
-  #     - public-network
-
-  cron:
-    image: python:3.10
+  data-ingestor: #only run it once to generate the main chunk of data then disable it and run the second serivece only to keep generating data daily
+    image: python:3.10  # Use the appropriate Python version
     volumes:
       - dw-rihal-training:/app
+    command: bash -c "pip install pandas faker psycopg2 && python3 /app/airline-data-ingestor.py"
     networks:
       - public-network
-    command: sh -c "pip install pandas faker psycopg2-binary && (crontab -l 2>/dev/null; echo '0 0 * * * python /app/new-data-generator.py') | crontab -"
+
+  # cron:
+  #   image: python:3.10
+  #   volumes:
+  #     - dw-rihal-training:/app
+  #   networks:
+  #     - public-network
+  #   command: 
+  #     - sh
+  #     - -c
+  #     - |
+  #       apt-get update
+  #       apt-get -y install cron
+  #       pip install pandas faker psycopg2
+  #       echo "10 35 * * * python /app/new-data-generator.py" > /etc/cron.d/mycron
+  #       cron
+  #       tail -f /dev/null
 
 
 volumes:
