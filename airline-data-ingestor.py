@@ -4,6 +4,9 @@ import pandas as pd
 from faker import Faker
 import uuid
 import psycopg2  
+from dotenv import load_dotenv
+import os
+
 
 print("Geneating data started!")
 
@@ -280,12 +283,14 @@ technician_data_df = pd.DataFrame(technician_data, columns=['technician_id', 'te
 #-------------------------------- DATABASE CREDINTALS ------------------------------ #
 
 # Define your PostgreSQL database credentials
+# Load environment variables from the .env file
+load_dotenv()
 db_credentials = {
-    'dbname': 'saqqaf_airlines',
-    'user': 'postgres',
-    'password': 'admin',
-    'host': '192.168.100.10',
-    'port': '5443'
+    'dbname': os.environ['DB_NAME'],
+    'user': os.environ['DB_USER'],
+    'password': os.environ['DB_PASSWORD'],
+    'host': os.environ['DB_HOST'],
+    'port': os.environ['DB_PORT']
 }
 
 

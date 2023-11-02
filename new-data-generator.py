@@ -8,7 +8,7 @@ fake = Faker()
 
 # Define your PostgreSQL database credentials
 db_credentials = {
-    'dbname': 'saqqaf_airlines',
+    'dbname': 'rihal_aviation',
     'user': 'postgres',
     'password': 'admin',
     'host': '192.168.100.10',
